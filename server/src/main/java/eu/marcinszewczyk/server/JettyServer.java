@@ -1,6 +1,6 @@
 package eu.marcinszewczyk.server;
 
-import eu.marcinszewczyk.rest.TransactionService;
+import eu.marcinszewczyk.rest.TransactionResource;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -36,7 +36,7 @@ public class JettyServer {
         ServletHolder serHol = handler.addServlet(ServletContainer.class, "/api/*");
         serHol.setInitOrder(1);
         serHol.setInitParameter("jersey.config.server.provider.classnames",
-                TransactionService.class.getCanonicalName() );
+                TransactionResource.class.getCanonicalName() );
 
         server.setHandler(handler);
     }
