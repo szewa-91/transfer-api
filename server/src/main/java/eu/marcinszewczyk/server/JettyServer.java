@@ -36,7 +36,7 @@ public class JettyServer {
         ServletHolder serHol = handler.addServlet(ServletContainer.class, "/api/*");
         serHol.setInitOrder(1);
         serHol.setInitParameter("jersey.config.server.provider.classnames",
-                TransactionResource.class.getCanonicalName() );
+                TransactionResource.class.getCanonicalName());
 
         server.setHandler(handler);
     }

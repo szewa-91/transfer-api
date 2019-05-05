@@ -1,6 +1,7 @@
 package eu.marcinszewczyk.rest;
 
 import eu.marcinszewczyk.model.Transaction;
+import eu.marcinszewczyk.services.ServiceProvider;
 import eu.marcinszewczyk.services.TransactionsService;
 
 import javax.ws.rs.*;
@@ -9,7 +10,17 @@ import javax.ws.rs.core.Response;
 
 @Path("/transactions")
 public class TransactionResource {
-	private TransactionsService transactionsService = new TransactionsService();
+	private TransactionsService transactionsService;
+
+	public TransactionResource() {
+		transactionsService = ServiceProvider.getTransactionsService();
+	}
+
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAllTransactions() {
+		return Response.ok(transactionsService.getAllTransactions()).build();
+	}
 
 	@GET
 	@Path("/{id}")
@@ -19,9 +30,8 @@ public class TransactionResource {
 	}
 
 	@POST
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response postTransaction(Transaction transaction) {
-		System.out.println(transaction);
-		return Response.ok().build();
+		return Response.ok(transactionsService.saveTransaction(transaction)).build();
 	}
 }
