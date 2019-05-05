@@ -1,6 +1,6 @@
 package eu.marcinszewczyk.server;
 
-import eu.marcinszewczyk.rest.TransferService;
+import eu.marcinszewczyk.rest.TransactionService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -33,10 +33,10 @@ public class JettyServer {
                 new ServletContextHandler(NO_SESSIONS);
         handler.setContextPath("/");
 
-        ServletHolder serHol = handler.addServlet(ServletContainer.class, "/rest/*");
+        ServletHolder serHol = handler.addServlet(ServletContainer.class, "/api/*");
         serHol.setInitOrder(1);
         serHol.setInitParameter("jersey.config.server.provider.classnames",
-                TransferService.class.getCanonicalName() );
+                TransactionService.class.getCanonicalName() );
 
         server.setHandler(handler);
     }
