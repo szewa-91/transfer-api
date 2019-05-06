@@ -29,14 +29,17 @@ public class E2ETest {
     @Test
     public void shouldSuccessfullyPostAndGetEntity() throws IOException, URISyntaxException {
         String transactionString = "{" +
-                "    \"id\":16," +
-                "    \"accountNumber\":\"123\"," +
-                "    \"direction\":\"RECEIVE\"," +
-                "    \"amount\":128.34" +
+                "    \"id\":621," +
+                "    \"payerAccountNumber\":\"123\"," +
+                "    \"receiverAccountNumber\":\"432\"," +
+                "    \"amount\":128.34," +
+                "    \"currencyCode\":null," +
+                "    \"issueDate\":null," +
+                "    \"status\":null" +
                 "  }";
 
         RestTestUtil.post("http://localhost:9090/transactions", transactionString);
-        ResponseWrapper response = RestTestUtil.get("http://localhost:9090/transactions/16");
+        ResponseWrapper response = RestTestUtil.get("http://localhost:9090/transactions/621");
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getBody()).isEqualToIgnoringWhitespace(transactionString);

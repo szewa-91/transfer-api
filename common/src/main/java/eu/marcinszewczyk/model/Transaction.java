@@ -1,16 +1,27 @@
 package eu.marcinszewczyk.model;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
+@Entity
 public class Transaction {
+    @Id
+    @Column
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String accountNumber;
-    private TransactionDirection direction;
+    @Column(nullable = false)
+    private String payerAccountNumber;
+    @Column(nullable = false)
+    private String receiverAccountNumber;
+    @Column(nullable = false)
     private BigDecimal amount;
-
-    public Transaction() {
-
-    }
+    @Column(nullable = false)
+    private String currencyCode;
+    @Column(nullable = false)
+    private LocalDate issueDate;
+    @Column(nullable = false)
+    private TransactionStatus status;
 
     public Long getId() {
         return id;
@@ -20,20 +31,20 @@ public class Transaction {
         this.id = id;
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
+    public String getPayerAccountNumber() {
+        return payerAccountNumber;
     }
 
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
+    public void setPayerAccountNumber(String payerAccountNumber) {
+        this.payerAccountNumber = payerAccountNumber;
     }
 
-    public TransactionDirection getDirection() {
-        return direction;
+    public String getReceiverAccountNumber() {
+        return receiverAccountNumber;
     }
 
-    public void setDirection(TransactionDirection direction) {
-        this.direction = direction;
+    public void setReceiverAccountNumber(String receiverAccountNumber) {
+        this.receiverAccountNumber = receiverAccountNumber;
     }
 
     public BigDecimal getAmount() {
@@ -44,13 +55,41 @@ public class Transaction {
         this.amount = amount;
     }
 
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
+    public LocalDate getIssueDate() {
+        return issueDate;
+    }
+
+    public void setIssueDate(LocalDate issueDate) {
+        this.issueDate = issueDate;
+    }
+
+    public TransactionStatus getStatus() {
+        return status;
+    }
+
     @Override
     public String toString() {
         return "Transaction{" +
                 "id=" + id +
-                ", accountNumber='" + accountNumber + '\'' +
-                ", direction=" + direction +
+                ", payerAccountNumber='" + payerAccountNumber + '\'' +
+                ", receiverAccountNumber='" + receiverAccountNumber + '\'' +
                 ", amount=" + amount +
+                ", currencyCode='" + currencyCode + '\'' +
+                ", issueDate=" + issueDate +
+                ", status=" + status +
                 '}';
     }
+
+    public void setStatus(TransactionStatus status) {
+        this.status = status;
+    }
+
 }
