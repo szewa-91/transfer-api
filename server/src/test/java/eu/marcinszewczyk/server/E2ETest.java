@@ -1,7 +1,5 @@
 package eu.marcinszewczyk.server;
 
-import eu.marcinszewczyk.model.Transaction;
-import eu.marcinszewczyk.model.TransactionDirection;
 import eu.marcinszewczyk.rest.RestTestUtil;
 import eu.marcinszewczyk.rest.RestTestUtil.ResponseWrapper;
 import eu.marcinszewczyk.services.ServiceProvider;
@@ -10,18 +8,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URISyntaxException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class E2ETest {
     private static JettyServer server;
-
-    private static final Transaction TRANSACTION_1 =
-            transaction(1L, "128.34", TransactionDirection.RECEIVE, "123");
-    private static final Transaction TRANSACTION_2 =
-            transaction(2L, "43.12", TransactionDirection.PAY, "432");
 
     @BeforeClass
     public static void setUp() {
@@ -35,7 +27,7 @@ public class E2ETest {
     }
 
     @Test
-    public void shouldPost() throws IOException, URISyntaxException {
+    public void shouldSuccessfullyPostAndGetEntity() throws IOException, URISyntaxException {
         String transactionString = "{" +
                 "    \"id\":16," +
                 "    \"accountNumber\":\"123\"," +
@@ -50,12 +42,4 @@ public class E2ETest {
         assertThat(response.getBody()).isEqualToIgnoringWhitespace(transactionString);
     }
 
-    private static Transaction transaction(long id, String amount, TransactionDirection direction, String accountNumber) {
-        Transaction transaction = new Transaction();
-        transaction.setId(id);
-        transaction.setAmount(new BigDecimal(amount));
-        transaction.setDirection(direction);
-        transaction.setAccountNumber(accountNumber);
-        return transaction;
-    }
 }
