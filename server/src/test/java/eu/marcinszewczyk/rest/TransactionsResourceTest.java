@@ -1,28 +1,25 @@
-package eu.marcinszewczyk.server;
+package eu.marcinszewczyk.rest;
 
 import eu.marcinszewczyk.model.Transaction;
 import eu.marcinszewczyk.model.TransactionDirection;
+import eu.marcinszewczyk.rest.RestTestUtil.ResponseWrapper;
+import eu.marcinszewczyk.server.JettyServer;
 import eu.marcinszewczyk.services.ServiceProvider;
 import eu.marcinszewczyk.services.TransactionsService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class JettyServerTest {
+public class TransactionsResourceTest {
     private static JettyServer server;
 
     private static TransactionsService transactionsService = mock(TransactionsService.class);
@@ -32,13 +29,13 @@ public class JettyServerTest {
             transaction(2L, "43.12", TransactionDirection.PAY, "432");
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         ServiceProvider serviceProvider = mock(ServiceProvider.class);
         server = new JettyServer(serviceProvider);
         when(serviceProvider.getTransactionsService()).thenReturn(transactionsService);
         when(transactionsService.getAllTransactions()).thenReturn(asList(TRANSACTION_1, TRANSACTION_2));
 
-        new Thread(() -> server.start()).run();
+        server.start();
     }
 
     @AfterClass
@@ -48,13 +45,9 @@ public class JettyServerTest {
 
     @Test
     public void shouldReturnTransactions() throws IOException, URISyntaxException {
-        String url = "/transactions";
-        HttpURLConnection http = (HttpURLConnection) new URI("http://localhost:9090").resolve(url).toURL().openConnection();
-        http.connect();
-        BufferedReader br = new BufferedReader(new InputStreamReader(http.getInputStream()));
-        String body = br.lines().collect(Collectors.joining());
-        assertThat(http.getResponseCode()).isEqualTo(200);
-        assertThat(body).isEqualToIgnoringWhitespace("[" +
+        ResponseWrapper response = RestTestUtil.get("http://localhost:9090/transactions");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualToIgnoringWhitespace("[" +
                 "{" +
                 "    \"id\":1," +
                 "    \"accountNumber\":\"123\"," +
@@ -69,6 +62,20 @@ public class JettyServerTest {
                 "  }" +
                 "]");
 
+    }
+
+    @Test
+    public void shouldPost() throws IOException, URISyntaxException {
+        String transactionString = "{" +
+                "    \"id\":1," +
+                "    \"accountNumber\":\"123\"," +
+                "    \"direction\":\"RECEIVE\"," +
+                "    \"amount\":128.34" +
+                "  }";
+
+        ResponseWrapper response = RestTestUtil.post("http://localhost:9090/transactions", transactionString);
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualToIgnoringWhitespace(transactionString);
     }
 
     private static Transaction transaction(long id, String amount, TransactionDirection direction, String accountNumber) {
