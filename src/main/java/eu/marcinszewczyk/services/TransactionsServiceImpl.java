@@ -20,13 +20,6 @@ public class TransactionsServiceImpl implements TransactionsService {
 
     TransactionsServiceImpl(Dao<Transaction, Long> transactionDao) {
         this.transactionDao = transactionDao;
-        try {
-            transactionDao.create(transaction("1234567", "7654321"));
-            transactionDao.create(transaction("7654321", "1234567"));
-            transactionDao.create(transaction("1234567", "7654765"));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     public Collection<Transaction> getAllTransactions() {
@@ -53,17 +46,6 @@ public class TransactionsServiceImpl implements TransactionsService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return transaction;
-    }
-
-    private Transaction transaction(String payerAccountNumber, String receiverAccountNumber) {
-        Transaction transaction = new Transaction();
-        transaction.setPayerAccountNumber(payerAccountNumber);
-        transaction.setPayerAccountNumber(payerAccountNumber);
-        transaction.setReceiverAccountNumber(receiverAccountNumber);
-        transaction.setAmount(BigDecimal.valueOf(200000.20));
-        transaction.setCurrencyCode("PLN");
-        transaction.setStatus(TransactionStatus.CREATED);
         return transaction;
     }
 }
