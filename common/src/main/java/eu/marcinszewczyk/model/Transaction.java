@@ -19,8 +19,6 @@ public class Transaction {
     @Column(nullable = false)
     private String currencyCode;
     @Column(nullable = false)
-    private LocalDate issueDate;
-    @Column(nullable = false)
     private TransactionStatus status;
 
     public Long getId() {
@@ -63,14 +61,6 @@ public class Transaction {
         this.currencyCode = currencyCode;
     }
 
-    public LocalDate getIssueDate() {
-        return issueDate;
-    }
-
-    public void setIssueDate(LocalDate issueDate) {
-        this.issueDate = issueDate;
-    }
-
     public TransactionStatus getStatus() {
         return status;
     }
@@ -83,7 +73,6 @@ public class Transaction {
                 ", receiverAccountNumber='" + receiverAccountNumber + '\'' +
                 ", amount=" + amount +
                 ", currencyCode='" + currencyCode + '\'' +
-                ", issueDate=" + issueDate +
                 ", status=" + status +
                 '}';
     }

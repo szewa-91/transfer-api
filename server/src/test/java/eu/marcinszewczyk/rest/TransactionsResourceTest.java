@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TransactionsResourceTest {
+    private final static int PORT = 9292;
     private static JettyServer server;
 
     private static TransactionsService transactionsService = mock(TransactionsService.class);
@@ -31,7 +32,7 @@ public class TransactionsResourceTest {
     @BeforeClass
     public static void setUp() {
         ServiceProvider serviceProvider = mock(ServiceProvider.class);
-        server = new JettyServer(serviceProvider);
+        server = new JettyServer(PORT, serviceProvider);
         when(serviceProvider.getTransactionsService()).thenReturn(transactionsService);
         when(transactionsService.getAllTransactions()).thenReturn(asList(TRANSACTION_1, TRANSACTION_2));
         when(transactionsService.saveTransaction(any())).thenAnswer(
@@ -47,7 +48,7 @@ public class TransactionsResourceTest {
 
     @Test
     public void shouldReturnTransactions() throws IOException, URISyntaxException {
-        ResponseWrapper response = RestTestUtil.get("http://localhost:9090/transactions");
+        ResponseWrapper response = RestTestUtil.get("http://localhost:9292/transactions");
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getBody()).isEqualToIgnoringWhitespace("[" +
                 "{" +
@@ -56,7 +57,6 @@ public class TransactionsResourceTest {
                 "    \"receiverAccountNumber\":\"432\"," +
                 "    \"amount\":128.34," +
                 "    \"currencyCode\":null," +
-                "    \"issueDate\":null," +
                 "    \"status\":null" +
                 "  }," +
                 "  {" +
@@ -65,7 +65,6 @@ public class TransactionsResourceTest {
                 "    \"receiverAccountNumber\":\"123\"," +
                 "    \"amount\":43.12," +
                 "    \"currencyCode\":null," +
-                "    \"issueDate\":null," +
                 "    \"status\":null" +
                 "  }" +
                 "]");
@@ -80,11 +79,10 @@ public class TransactionsResourceTest {
                 "    \"receiverAccountNumber\":\"432\"," +
                 "    \"amount\":128.34," +
                 "    \"currencyCode\":null," +
-                "    \"issueDate\":null," +
                 "    \"status\":null" +
                 "  }";
 
-        ResponseWrapper response = RestTestUtil.post("http://localhost:9090/transactions", transactionString);
+        ResponseWrapper response = RestTestUtil.post("http://localhost:9292/transactions", transactionString);
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getBody()).isEqualToIgnoringWhitespace(transactionString);
     }

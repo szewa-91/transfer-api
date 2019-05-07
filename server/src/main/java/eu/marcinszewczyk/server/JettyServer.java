@@ -9,15 +9,17 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
 public class JettyServer {
-    private ServiceProvider serviceProvider;
+    private final ServiceProvider serviceProvider;
+    private final int port;
     private Server server;
 
-    public JettyServer(ServiceProvider serviceProvider) {
+    public JettyServer(int port, ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+        this.port = port;
     }
 
     public void start() {
-        server = new Server(9090);
+        server = new Server(port);
         configureRest(server);
 
         try {
