@@ -7,8 +7,8 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
-public class RestTestUtil {
-    public static ResponseWrapper get(String endpoint) throws IOException, URISyntaxException {
+class RestTestUtil {
+    static ResponseWrapper get(String endpoint) throws IOException, URISyntaxException {
         HttpURLConnection http = (HttpURLConnection) new URI(endpoint).toURL().openConnection();
         http.connect();
         BufferedReader br = new BufferedReader(new InputStreamReader(http.getInputStream()));
@@ -16,7 +16,7 @@ public class RestTestUtil {
         return new ResponseWrapper(http.getResponseCode(), body);
     }
 
-    public static ResponseWrapper post(String endpoint, String body) throws IOException, URISyntaxException {
+    static ResponseWrapper post(String endpoint, String body) throws IOException, URISyntaxException {
         HttpURLConnection http = (HttpURLConnection) new URI(endpoint).toURL().openConnection();
         http.setRequestMethod("POST");
         http.setDoOutput(true);
@@ -35,7 +35,7 @@ public class RestTestUtil {
                 br.lines().collect(Collectors.joining()));
     }
 
-    public static class ResponseWrapper {
+    static class ResponseWrapper {
         private int status;
         private String body;
 
@@ -44,11 +44,11 @@ public class RestTestUtil {
             this.body = body;
         }
 
-        public int getStatus() {
+        int getStatus() {
             return status;
         }
 
-        public String getBody() {
+        String getBody() {
             return body;
         }
     }

@@ -1,10 +1,11 @@
-package eu.marcinszewczyk.server;
+package eu.marcinszewczyk.rest;
 
 import eu.marcinszewczyk.db.DbConfig;
 import eu.marcinszewczyk.db.DbFactory;
 import eu.marcinszewczyk.db.DbFactoryImpl;
 import eu.marcinszewczyk.rest.RestTestUtil;
 import eu.marcinszewczyk.rest.RestTestUtil.ResponseWrapper;
+import eu.marcinszewczyk.server.JettyServer;
 import eu.marcinszewczyk.services.ServiceProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
