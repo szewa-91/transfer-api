@@ -44,13 +44,13 @@ public class TransactionResource extends HttpServlet {
             HttpServletResponse response)
             throws IOException {
         Transaction transaction = objectMapper.readValue(request.getReader(), Transaction.class);
-        transactionsService.saveTransaction(transaction);
 
-        respondWithObject(response, HttpServletResponse.SC_OK, transaction);
+        respondWithObject(response, HttpServletResponse.SC_OK,
+                transactionsService.executeTransaction(transaction));
     }
 
-    private void respondWithObject(HttpServletResponse response, int status, Object transactions) throws IOException {
-        response.getWriter().println(objectMapper.writeValueAsString(transactions));
+    private void respondWithObject(HttpServletResponse response, int status, Object object) throws IOException {
+        response.getWriter().println(objectMapper.writeValueAsString(object));
         response.setContentType("application/json");
         response.setStatus(status);
     }

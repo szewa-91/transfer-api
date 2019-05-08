@@ -29,6 +29,18 @@ public class Account {
         this.balance = balance;
     }
 
+    public boolean hasAmount(BigDecimal amount) {
+        return getBalance().compareTo(amount) >= 0;
+    }
+
+    public void subtractFromBalance(BigDecimal amount) {
+        setBalance(getBalance().subtract(amount));
+    }
+
+    public void addToBalance(BigDecimal amount) {
+        setBalance(getBalance().add(amount));
+    }
+
     public String getCurrencyCode() {
         return currencyCode;
     }

@@ -18,7 +18,7 @@ public class DbFactoryImpl implements DbFactory {
     }
 
     @Override
-    public DaoProvider getDaos() throws SQLException, IOException {
+    public DaoProvider setupDatabase() throws SQLException, IOException {
         try (ConnectionSource connectionSource = openConnection(dbConfig)) {
             if (dbConfig.isShouldCreateSchema()) {
                 TableUtils.dropTable(connectionSource, Transaction.class, true);

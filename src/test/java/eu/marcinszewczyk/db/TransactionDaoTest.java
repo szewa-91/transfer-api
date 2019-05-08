@@ -24,7 +24,7 @@ public class TransactionDaoTest {
 
     @Before
     public void setUp() throws Exception {
-        transactionDao = DbTestUtil.getTestDbFactory().getDaos().getTransactionDao();
+        transactionDao = DbTestUtil.getTestDbFactory().setupDatabase().getTransactionDao();
         transactionDao.create(EXISTING_TRANSACTION_1);
         transactionDao.create(EXISTING_TRANSACTION_2);
         transactionDao.create(EXISTING_TRANSACTION_3);

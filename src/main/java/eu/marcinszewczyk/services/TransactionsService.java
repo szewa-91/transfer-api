@@ -7,5 +7,5 @@ import java.util.Collection;
 public interface TransactionsService {
     Collection<Transaction> getAllTransactions();
     Transaction getTransaction(Long id);
-    Transaction saveTransaction(Transaction transaction);
+    Transaction executeTransaction(Transaction transaction);
 }

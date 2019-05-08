@@ -11,9 +11,10 @@ public class ServiceProvider {
     private Map<Class, Object> servicesInstances;
 
     public ServiceProvider(DbFactory dbFactory) throws IOException, SQLException {
-        DaoProvider daoProvider = dbFactory.getDaos();
+        DaoProvider daoProvider = dbFactory.setupDatabase();
         servicesInstances = Map.of(
-                TransactionsService.class, new TransactionsServiceImpl(daoProvider.getTransactionDao())
+                TransactionsService.class,
+                new TransactionsServiceImpl(daoProvider.getTransactionDao(), daoProvider.getAccountDao())
         );
     }
 

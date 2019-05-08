@@ -35,7 +35,7 @@ public class TransactionsResourceTest {
         server = new JettyServer(PORT, serviceProvider);
         when(serviceProvider.getTransactionsService()).thenReturn(transactionsService);
         when(transactionsService.getAllTransactions()).thenReturn(asList(TRANSACTION_1, TRANSACTION_2));
-        when(transactionsService.saveTransaction(any())).thenAnswer(
+        when(transactionsService.executeTransaction(any())).thenAnswer(
                 invocationOnMock -> invocationOnMock.getArgument(0));
 
         server.start();
