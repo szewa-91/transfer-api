@@ -22,9 +22,10 @@ public class TransferRepository {
         return entityManager.find(Transfer.class, id);
     }
 
-    public void save(Transfer transfer) {
+    public Transfer save(Transfer transfer) {
         entityManager.getTransaction().begin();
-        entityManager.persist(transfer);
+        Transfer savedTransfer = entityManager.merge(transfer);
         entityManager.getTransaction().commit();
+        return savedTransfer;
     }
 }

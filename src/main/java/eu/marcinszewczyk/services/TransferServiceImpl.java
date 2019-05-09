@@ -32,11 +32,7 @@ public class TransferServiceImpl implements TransferService {
         System.out.println("Received transfer: " + transfer);
         validateTransfer(transfer);
 
-        transfer.setStatus(TransferStatus.CREATED);
-        transferRepository.save(transfer);
-
-        TransferStatus status = performMovement(transfer);
-        return updateWithStatus(transfer, status);
+        return saveWithStatus(transfer, performMovement(saveWithStatus(transfer, TransferStatus.CREATED)));
     }
 
     private TransferStatus performMovement(Transfer transfer) throws SQLException {
@@ -67,7 +63,7 @@ public class TransferServiceImpl implements TransferService {
         }
     }
 
-    private Transfer updateWithStatus(Transfer transfer, TransferStatus rejected) {
+    private Transfer saveWithStatus(Transfer transfer, TransferStatus rejected) {
         transfer.setStatus(rejected);
         transferRepository.save(transfer);
         return transfer;

@@ -10,7 +10,6 @@ import eu.marcinszewczyk.util.DbTestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
@@ -19,8 +18,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TransferServiceIntegrationTest {
     private static final BigDecimal BALANCE_1 = new BigDecimal("100.00");
     private static final BigDecimal BALANCE_2 = new BigDecimal("50.00");
-    private static final Account ACCOUNT_1 = account("1234", BALANCE_1, "USD");
-    private static final Account ACCOUNT_2 = account("5678", BALANCE_2, "USD");
+    private static final String ACCOUNT_NUMBER_1 = "1234";
+    private static final String ACCOUNT_NUMBER_2 = "5678";
+    private static final String NON_EXISTENT_ACCOUNT_NUMBER_1 = "1799";
+    private static final String NON_EXISTENT_ACCOUNT_NUMBER_2 = "1800";
 
     private AccountRepository accountRepository;
     private TransferService transferService;
@@ -31,8 +32,8 @@ public class TransferServiceIntegrationTest {
         accountRepository = dbFactory.getAccountRepository();
         TransferRepository transferRepository = dbFactory.getTransferRepository();
 
-        accountRepository.save(ACCOUNT_1);
-        accountRepository.save(ACCOUNT_2);
+        accountRepository.save(account(ACCOUNT_NUMBER_1, BALANCE_1, "USD"));
+        accountRepository.save(account(ACCOUNT_NUMBER_2, BALANCE_2, "USD"));
 
         transferService = new TransferServiceImpl(transferRepository, accountRepository);
     }
@@ -41,32 +42,48 @@ public class TransferServiceIntegrationTest {
     public void shouldPerformTransfer() throws SQLException {
         BigDecimal transferAmount = new BigDecimal("70");
         Transfer transfer = transfer(
-                ACCOUNT_1.getAccountNumber(),
-                ACCOUNT_2.getAccountNumber(),
+                account(ACCOUNT_NUMBER_1, BALANCE_1, "USD").getAccountNumber(),
+                account(ACCOUNT_NUMBER_2, BALANCE_2, "USD").getAccountNumber(),
                 transferAmount);
 
         Transfer result = transferService.executeTransfer(transfer);
 
         assertThat(result.getStatus()).isEqualTo(TransferStatus.COMPLETED);
-        assertThat(accountRepository.findById(ACCOUNT_1.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
                 .isEqualByComparingTo(BALANCE_1.subtract(transferAmount));
-        assertThat(accountRepository.findById(ACCOUNT_2.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
                 .isEqualByComparingTo(BALANCE_2.add(transferAmount));
     }
 
     @Test
-    public void shouldNotPerformTransfer() throws SQLException {
+    public void shouldNotPerformTransferIfNotSufficientBalance() throws SQLException {
         Transfer transfer = transfer(
-                ACCOUNT_1.getAccountNumber(),
-                ACCOUNT_2.getAccountNumber(),
+                account(ACCOUNT_NUMBER_1, BALANCE_1, "USD").getAccountNumber(),
+                account(ACCOUNT_NUMBER_2, BALANCE_2, "USD").getAccountNumber(),
                 new BigDecimal("170"));
 
         Transfer result = transferService.executeTransfer(transfer);
 
         assertThat(result.getStatus()).isEqualTo(TransferStatus.REJECTED);
-        assertThat(accountRepository.findById(ACCOUNT_1.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
                 .isEqualByComparingTo(BALANCE_1);
-        assertThat(accountRepository.findById(ACCOUNT_2.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
+                .isEqualByComparingTo(BALANCE_2);
+    }
+
+    @Test
+    public void shouldNotPerformTransferIfNoAccounts() throws SQLException {
+        Transfer transfer = transfer(
+                NON_EXISTENT_ACCOUNT_NUMBER_1,
+                NON_EXISTENT_ACCOUNT_NUMBER_2,
+                new BigDecimal("1"));
+
+        Transfer result = transferService.executeTransfer(transfer);
+
+        assertThat(result.getStatus()).isEqualTo(TransferStatus.REJECTED);
+        assertThat(accountRepository.findById(account(ACCOUNT_NUMBER_1, BALANCE_1, "USD").getAccountNumber()).getBalance())
+                .isEqualByComparingTo(BALANCE_1);
+        assertThat(accountRepository.findById(account(ACCOUNT_NUMBER_2, BALANCE_2, "USD").getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_2);
     }
 
