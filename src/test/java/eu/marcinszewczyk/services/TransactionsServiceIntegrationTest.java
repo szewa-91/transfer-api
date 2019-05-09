@@ -1,14 +1,19 @@
 package eu.marcinszewczyk.services;
 
-import com.j256.ormlite.dao.Dao;
+import eu.marcinszewczyk.db.AccountRepository;
 import eu.marcinszewczyk.db.DbFactory;
+import eu.marcinszewczyk.db.DbFactoryImpl;
+import eu.marcinszewczyk.db.TransactionRepository;
 import eu.marcinszewczyk.model.Account;
 import eu.marcinszewczyk.model.Transaction;
 import eu.marcinszewczyk.model.TransactionStatus;
 import eu.marcinszewczyk.util.DbTestUtil;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -21,21 +26,20 @@ public class TransactionsServiceIntegrationTest {
     private static final Account ACCOUNT_1 = account("1234", BALANCE_1, "USD");
     private static final Account ACCOUNT_2 = account("5678", BALANCE_2, "USD");
 
-    private Dao<Transaction, Long> transactionDao;
-    private Dao<Account, String> accountDao;
+    private TransactionRepository transactionRepository;
+    private AccountRepository accountRepository;
     private TransactionsService transactionsService;
 
     @Before
     public void setUp() throws IOException, SQLException {
         DbFactory dbFactory = DbTestUtil.getTestDbFactory();
+        accountRepository = dbFactory.getAccountRepository();
+        transactionRepository = dbFactory.getTransactionRepository();
 
-        transactionDao = dbFactory.setupDatabase().getTransactionDao();
-        accountDao = dbFactory.setupDatabase().getAccountDao();
+        accountRepository.save(ACCOUNT_1);
+        accountRepository.save(ACCOUNT_2);
 
-        accountDao.create(ACCOUNT_1);
-        accountDao.create(ACCOUNT_2);
-
-        transactionsService = new TransactionsServiceImpl(transactionDao, accountDao);
+        transactionsService = new TransactionsServiceImpl(transactionRepository, accountRepository);
     }
 
     @Test
@@ -49,9 +53,9 @@ public class TransactionsServiceIntegrationTest {
         Transaction result = transactionsService.executeTransaction(transaction);
 
         assertThat(result.getStatus()).isEqualTo(TransactionStatus.COMPLETED);
-        assertThat(accountDao.queryForId(ACCOUNT_1.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_1.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_1.subtract(transferAmount));
-        assertThat(accountDao.queryForId(ACCOUNT_2.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_2.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_2.add(transferAmount));
     }
 
@@ -65,9 +69,9 @@ public class TransactionsServiceIntegrationTest {
         Transaction result = transactionsService.executeTransaction(transaction);
 
         assertThat(result.getStatus()).isEqualTo(TransactionStatus.REJECTED);
-        assertThat(accountDao.queryForId(ACCOUNT_1.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_1.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_1);
-        assertThat(accountDao.queryForId(ACCOUNT_2.getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_2.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_2);
     }
 

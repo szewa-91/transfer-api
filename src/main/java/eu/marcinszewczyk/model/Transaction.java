@@ -18,8 +18,11 @@ public class Transaction {
     private BigDecimal amount;
     @Column(nullable = false)
     private String currencyCode;
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionStatus status;
+//    @Column(nullable = false)
+//    private LocalDate valueDate;
 
     public Long getId() {
         return id;
@@ -65,6 +68,14 @@ public class Transaction {
         return status;
     }
 
+//    public LocalDate getValueDate() {
+//        return valueDate;
+//    }
+//
+//    public void setValueDate(LocalDate valueDate) {
+//        this.valueDate = valueDate;
+//    }
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -74,6 +85,7 @@ public class Transaction {
                 ", amount=" + amount +
                 ", currencyCode='" + currencyCode + '\'' +
                 ", status=" + status +
+//                ", valueDate=" + valueDate +
                 '}';
     }
 

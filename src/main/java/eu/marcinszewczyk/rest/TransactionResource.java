@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 import static java.lang.Long.parseLong;
@@ -30,11 +31,17 @@ public class TransactionResource extends HttpServlet {
             throws IOException {
         List<String> pathParts = getPaths(request);
 
-        if (pathParts.isEmpty()) {
-            respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getAllTransactions());
-        } else if (pathParts.size() == 1) {
-            long id = parseLong(pathParts.get(0));
-            respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getTransaction(id));
+        try {
+            if (pathParts.isEmpty()) {
+                respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getAllTransactions());
+
+            } else if (pathParts.size() == 1) {
+                long id = parseLong(pathParts.get(0));
+                respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getTransaction(id));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -45,8 +52,13 @@ public class TransactionResource extends HttpServlet {
             throws IOException {
         Transaction transaction = objectMapper.readValue(request.getReader(), Transaction.class);
 
-        respondWithObject(response, HttpServletResponse.SC_OK,
-                transactionsService.executeTransaction(transaction));
+        try {
+            respondWithObject(response, HttpServletResponse.SC_OK,
+                    transactionsService.executeTransaction(transaction));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     private void respondWithObject(HttpServletResponse response, int status, Object object) throws IOException {

@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +31,7 @@ public class TransactionsResourceTest {
             transaction(2L, "43.12", "432", "123");
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws SQLException {
         ServiceProvider serviceProvider = mock(ServiceProvider.class);
         server = new JettyServer(PORT, serviceProvider);
         when(serviceProvider.getTransactionsService()).thenReturn(transactionsService);

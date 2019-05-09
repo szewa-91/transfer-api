@@ -1,6 +1,7 @@
 package eu.marcinszewczyk.services;
 
-import com.j256.ormlite.dao.Dao;
+import eu.marcinszewczyk.db.AccountRepository;
+import eu.marcinszewczyk.db.TransactionRepository;
 import eu.marcinszewczyk.model.Account;
 import eu.marcinszewczyk.model.Transaction;
 import eu.marcinszewczyk.model.TransactionStatus;
@@ -11,82 +12,64 @@ import java.util.Collection;
 
 public class TransactionsServiceImpl implements TransactionsService {
 
-    private final Dao<Transaction, Long> transactionDao;
-    private final Dao<Account, String> accountDao;
+    private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
 
-    TransactionsServiceImpl(Dao<Transaction, Long> transactionDao, Dao<Account, String> accountDao) {
-        this.transactionDao = transactionDao;
-        this.accountDao = accountDao;
+    public TransactionsServiceImpl(TransactionRepository transactionRepository, AccountRepository accountRepository) {
+        this.transactionRepository = transactionRepository;
+        this.accountRepository = accountRepository;
     }
 
-    public Collection<Transaction> getAllTransactions() {
-        try {
-            return transactionDao.queryForAll();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public Collection<Transaction> getAllTransactions() throws SQLException {
+        return transactionRepository.findAll();
     }
 
-    public Transaction getTransaction(Long id) {
-        try {
-            return transactionDao.queryForId(id);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public Transaction getTransaction(Long id) throws SQLException {
+        return transactionRepository.findById(id);
     }
 
-    public Transaction executeTransaction(Transaction transaction) {
-        try {
-            System.out.println("Received transaction: " + transaction);
-            validateTransaction(transaction);
+    public Transaction executeTransaction(Transaction transaction) throws SQLException {
+        System.out.println("Received transaction: " + transaction);
+        validateTransaction(transaction);
 
-            transaction.setStatus(TransactionStatus.CREATED);
-            transactionDao.create(transaction);
+        transaction.setStatus(TransactionStatus.CREATED);
+        transactionRepository.save(transaction);
 
-            Account payerAccount = getAccount(transaction.getPayerAccountNumber());
-            Account receiverAccount = getAccount(transaction.getReceiverAccountNumber());
+        Account payerAccount = getAccount(transaction.getPayerAccountNumber());
+        Account receiverAccount = getAccount(transaction.getReceiverAccountNumber());
 
-            if (payerAccount == null) {
-                System.out.println("No account found: " + transaction.getPayerAccountNumber()
-                        + "Transaction rejected: " + transaction);
-                return updateWithStatus(transaction, TransactionStatus.REJECTED);
-            }
-            if (receiverAccount == null) {
-                System.out.println("No account found: " + transaction.getReceiverAccountNumber()
-                        + "Transaction rejected: " + transaction);
-                return updateWithStatus(transaction, TransactionStatus.REJECTED);
-            }
-            BigDecimal amount = transaction.getAmount();
-            if (payerAccount.hasAmount(amount)) {
-                payerAccount.subtractFromBalance(amount);
-                receiverAccount.addToBalance(amount);
-                accountDao.update(payerAccount);
-                accountDao.update(receiverAccount);
-                System.out.println("Transaction executed: " + transaction);
-                return updateWithStatus(transaction, TransactionStatus.COMPLETED);
-            } else {
-                System.out.println("Transaction not executed, no money on the payer account: " + transaction);
-                return updateWithStatus(transaction, TransactionStatus.REJECTED);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            transaction.setStatus(TransactionStatus.REJECTED);
-            return transaction;
+        if (payerAccount == null) {
+            System.out.println("No account found: " + transaction.getPayerAccountNumber()
+                    + "Transaction rejected: " + transaction);
+            return updateWithStatus(transaction, TransactionStatus.REJECTED);
         }
-
+        if (receiverAccount == null) {
+            System.out.println("No account found: " + transaction.getReceiverAccountNumber()
+                    + "Transaction rejected: " + transaction);
+            return updateWithStatus(transaction, TransactionStatus.REJECTED);
+        }
+        BigDecimal amount = transaction.getAmount();
+        if (payerAccount.hasAmount(amount)) {
+            payerAccount.subtractFromBalance(amount);
+            receiverAccount.addToBalance(amount);
+            accountRepository.save(payerAccount);
+            accountRepository.save(receiverAccount);
+            System.out.println("Transaction executed: " + transaction);
+            return updateWithStatus(transaction, TransactionStatus.COMPLETED);
+        } else {
+            System.out.println("Transaction not executed, no money on the payer account: " + transaction);
+            return updateWithStatus(transaction, TransactionStatus.REJECTED);
+        }
     }
 
     private Transaction updateWithStatus(Transaction transaction, TransactionStatus rejected) throws SQLException {
         transaction.setStatus(rejected);
-        transactionDao.update(transaction);
+        transactionRepository.save(transaction);
         return transaction;
     }
 
     private Account getAccount(String payerAccountNumber) throws SQLException {
-        return accountDao.queryForId(payerAccountNumber);
+        return accountRepository.findById(payerAccountNumber);
     }
 
     private void validateTransaction(Transaction transaction) {

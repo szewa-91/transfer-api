@@ -1,6 +1,5 @@
 package eu.marcinszewczyk.db;
 
-import com.j256.ormlite.dao.Dao;
 import eu.marcinszewczyk.model.Transaction;
 import eu.marcinszewczyk.model.TransactionStatus;
 import eu.marcinszewczyk.util.DbTestUtil;
@@ -9,47 +8,54 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TransactionDaoTest {
+public class TransactionRepositoryTest {
     private static final String PAYER_ACCOUNT_NUMBER = "1231231";
     private static final String RECEIVER_ACCOUNT_NUMBER = "321321321";
     private static final String AMOUNT_STRING = "33.52";
-    private static final Transaction EXISTING_TRANSACTION_1 = transaction("1234567", "7654321", "21.20");
-    private static final Transaction EXISTING_TRANSACTION_2 = transaction("7654321", "1234567", "14.20");
-    private static final Transaction EXISTING_TRANSACTION_3 = transaction("1234567", "7654765", "200000.20");
-    private Dao<Transaction, Long> transactionDao;
+    private TransactionRepository transactionRepository;
 
     @Before
-    public void setUp() throws Exception {
-        transactionDao = DbTestUtil.getTestDbFactory().setupDatabase().getTransactionDao();
-        transactionDao.create(EXISTING_TRANSACTION_1);
-        transactionDao.create(EXISTING_TRANSACTION_2);
-        transactionDao.create(EXISTING_TRANSACTION_3);
+    public void setUp() {
+        DbFactory dbFactory = DbTestUtil.getTestDbFactory();
+        transactionRepository = dbFactory.getTransactionRepository();
+
+        transactionRepository.save(transaction("1234567", "7654321", "21.20"));
+        transactionRepository.save(transaction("7654321", "1234567", "14.20"));
+        transactionRepository.save(transaction("1234567", "7654765", "200000.20"));
     }
 
     @Test
     public void shouldGetAll() throws SQLException {
-        List<Transaction> transactions = transactionDao.queryForAll();
+        Collection<Transaction> transactions = transactionRepository.findAll();
 
         assertThat(transactions).hasSize(3);
     }
 
     @Test
     public void shouldGetById() throws SQLException {
-        Transaction transaction = transactionDao.queryForId(1L);
+        Transaction transaction = transactionRepository.findById(1L);
 
-        assertThat(transaction).isEqualToComparingFieldByField(EXISTING_TRANSACTION_1);
+        assertThat(transaction).extracting(
+                Transaction::getId,
+                Transaction::getPayerAccountNumber,
+                Transaction::getReceiverAccountNumber,
+                Transaction::getAmount
+        ).containsExactly(
+                1L, "1234567", "7654321", new BigDecimal("21.20")
+        );
     }
 
     @Test
     public void shouldSaveWithNextId() throws SQLException {
-        transactionDao.create(transaction(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, AMOUNT_STRING));
+        Transaction transaction = transaction(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, AMOUNT_STRING);
+        transactionRepository.save(transaction);
 
         long expectedId = 4L;
-        Transaction transaction = transactionDao.queryForId(expectedId);
+//        Transaction transaction = transactionRepository.findById(expectedId);
 
         assertThat(transaction).extracting(
                 Transaction::getId,

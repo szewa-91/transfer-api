@@ -1,6 +1,5 @@
 package eu.marcinszewczyk.rest;
 
-import com.j256.ormlite.dao.Dao;
 import eu.marcinszewczyk.db.DbFactory;
 import eu.marcinszewczyk.model.Account;
 import eu.marcinszewczyk.rest.RestTestUtil.ResponseWrapper;
@@ -30,9 +29,6 @@ public class E2ETest {
     @BeforeClass
     public static void setUp() throws IOException, SQLException {
         DbFactory dbFactory = DbTestUtil.getTestDbFactory();
-        Dao<Account, String> accountDao = dbFactory.setupDatabase().getAccountDao();
-        accountDao.create(ACCOUNT_1);
-        accountDao.create(ACCOUNT_2);
 
         server = new JettyServer(PORT, new ServiceProvider(dbFactory));
         server.start();
