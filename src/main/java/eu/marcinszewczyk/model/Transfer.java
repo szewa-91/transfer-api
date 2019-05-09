@@ -2,10 +2,9 @@ package eu.marcinszewczyk.model;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Entity
-public class Transaction {
+public class Transfer {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +19,7 @@ public class Transaction {
     private String currencyCode;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TransactionStatus status;
+    private TransferStatus status;
 //    @Column(nullable = false)
 //    private LocalDate valueDate;
 
@@ -64,7 +63,7 @@ public class Transaction {
         this.currencyCode = currencyCode;
     }
 
-    public TransactionStatus getStatus() {
+    public TransferStatus getStatus() {
         return status;
     }
 
@@ -78,7 +77,7 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction{" +
+        return "Transfer{" +
                 "id=" + id +
                 ", payerAccountNumber='" + payerAccountNumber + '\'' +
                 ", receiverAccountNumber='" + receiverAccountNumber + '\'' +
@@ -89,7 +88,7 @@ public class Transaction {
                 '}';
     }
 
-    public void setStatus(TransactionStatus status) {
+    public void setStatus(TransferStatus status) {
         this.status = status;
     }
 

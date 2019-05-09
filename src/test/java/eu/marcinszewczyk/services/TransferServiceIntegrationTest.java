@@ -2,57 +2,52 @@ package eu.marcinszewczyk.services;
 
 import eu.marcinszewczyk.db.AccountRepository;
 import eu.marcinszewczyk.db.DbFactory;
-import eu.marcinszewczyk.db.DbFactoryImpl;
-import eu.marcinszewczyk.db.TransactionRepository;
+import eu.marcinszewczyk.db.TransferRepository;
 import eu.marcinszewczyk.model.Account;
-import eu.marcinszewczyk.model.Transaction;
-import eu.marcinszewczyk.model.TransactionStatus;
+import eu.marcinszewczyk.model.Transfer;
+import eu.marcinszewczyk.model.TransferStatus;
 import eu.marcinszewczyk.util.DbTestUtil;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TransactionsServiceIntegrationTest {
+public class TransferServiceIntegrationTest {
     private static final BigDecimal BALANCE_1 = new BigDecimal("100.00");
     private static final BigDecimal BALANCE_2 = new BigDecimal("50.00");
     private static final Account ACCOUNT_1 = account("1234", BALANCE_1, "USD");
     private static final Account ACCOUNT_2 = account("5678", BALANCE_2, "USD");
 
-    private TransactionRepository transactionRepository;
     private AccountRepository accountRepository;
-    private TransactionsService transactionsService;
+    private TransferService transferService;
 
     @Before
-    public void setUp() throws IOException, SQLException {
+    public void setUp() {
         DbFactory dbFactory = DbTestUtil.getTestDbFactory();
         accountRepository = dbFactory.getAccountRepository();
-        transactionRepository = dbFactory.getTransactionRepository();
+        TransferRepository transferRepository = dbFactory.getTransferRepository();
 
         accountRepository.save(ACCOUNT_1);
         accountRepository.save(ACCOUNT_2);
 
-        transactionsService = new TransactionsServiceImpl(transactionRepository, accountRepository);
+        transferService = new TransferServiceImpl(transferRepository, accountRepository);
     }
 
     @Test
-    public void shouldPerformTransaction() throws SQLException {
+    public void shouldPerformTransfer() throws SQLException {
         BigDecimal transferAmount = new BigDecimal("70");
-        Transaction transaction = transaction(
+        Transfer transfer = transfer(
                 ACCOUNT_1.getAccountNumber(),
                 ACCOUNT_2.getAccountNumber(),
                 transferAmount);
 
-        Transaction result = transactionsService.executeTransaction(transaction);
+        Transfer result = transferService.executeTransfer(transfer);
 
-        assertThat(result.getStatus()).isEqualTo(TransactionStatus.COMPLETED);
+        assertThat(result.getStatus()).isEqualTo(TransferStatus.COMPLETED);
         assertThat(accountRepository.findById(ACCOUNT_1.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_1.subtract(transferAmount));
         assertThat(accountRepository.findById(ACCOUNT_2.getAccountNumber()).getBalance())
@@ -60,30 +55,30 @@ public class TransactionsServiceIntegrationTest {
     }
 
     @Test
-    public void shouldNotPerformTransaction() throws SQLException {
-        Transaction transaction = transaction(
+    public void shouldNotPerformTransfer() throws SQLException {
+        Transfer transfer = transfer(
                 ACCOUNT_1.getAccountNumber(),
                 ACCOUNT_2.getAccountNumber(),
                 new BigDecimal("170"));
 
-        Transaction result = transactionsService.executeTransaction(transaction);
+        Transfer result = transferService.executeTransfer(transfer);
 
-        assertThat(result.getStatus()).isEqualTo(TransactionStatus.REJECTED);
+        assertThat(result.getStatus()).isEqualTo(TransferStatus.REJECTED);
         assertThat(accountRepository.findById(ACCOUNT_1.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_1);
         assertThat(accountRepository.findById(ACCOUNT_2.getAccountNumber()).getBalance())
                 .isEqualByComparingTo(BALANCE_2);
     }
 
-    private static Transaction transaction(String payerAccountNumber, String receiverAccountNumber, BigDecimal amount) {
-        Transaction transaction = new Transaction();
-        transaction.setPayerAccountNumber(payerAccountNumber);
-        transaction.setPayerAccountNumber(payerAccountNumber);
-        transaction.setReceiverAccountNumber(receiverAccountNumber);
-        transaction.setAmount(amount);
-        transaction.setCurrencyCode("PLN");
-        transaction.setStatus(TransactionStatus.CREATED);
-        return transaction;
+    private static Transfer transfer(String payerAccountNumber, String receiverAccountNumber, BigDecimal amount) {
+        Transfer transfer = new Transfer();
+        transfer.setPayerAccountNumber(payerAccountNumber);
+        transfer.setPayerAccountNumber(payerAccountNumber);
+        transfer.setReceiverAccountNumber(receiverAccountNumber);
+        transfer.setAmount(amount);
+        transfer.setCurrencyCode("PLN");
+        transfer.setStatus(TransferStatus.CREATED);
+        return transfer;
     }
 
     private static Account account(String accountNumber, BigDecimal balance, String currencyCode) {

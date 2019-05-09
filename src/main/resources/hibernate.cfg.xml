@@ -11,6 +11,6 @@
     <property name="show_sql">true</property>
     <property name="hbm2ddl.auto">create</property>
     <mapping class="eu.marcinszewczyk.model.Account"/>
-    <mapping class="eu.marcinszewczyk.model.Transaction"/>
+    <mapping class="eu.marcinszewczyk.model.Transfer"/>
   </session-factory>
 </hibernate-configuration>

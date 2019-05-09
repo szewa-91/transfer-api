@@ -2,23 +2,21 @@ package eu.marcinszewczyk.services;
 
 import eu.marcinszewczyk.db.DbFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Map;
 
 public class ServiceProvider {
     private Map<Class, Object> servicesInstances;
 
-    public ServiceProvider(DbFactory dbFactory) throws IOException, SQLException {
+    public ServiceProvider(DbFactory dbFactory) {
         servicesInstances = Map.of(
-                TransactionsService.class,
-                new TransactionsServiceImpl(
-                        dbFactory.getTransactionRepository(),
+                TransferService.class,
+                new TransferServiceImpl(
+                        dbFactory.getTransferRepository(),
                         dbFactory.getAccountRepository())
         );
     }
 
-    public TransactionsService getTransactionsService() {
-        return (TransactionsService) servicesInstances.get(TransactionsService.class);
+    public TransferService getTransferService() {
+        return (TransferService) servicesInstances.get(TransferService.class);
     }
 }

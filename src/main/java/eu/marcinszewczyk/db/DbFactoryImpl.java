@@ -15,7 +15,7 @@ public class DbFactoryImpl implements DbFactory {
     }
 
     @Override
-    public TransactionRepository getTransactionRepository() {
-        return new TransactionRepository(entityManager);
+    public TransferRepository getTransferRepository() {
+        return new TransferRepository(entityManager);
     }
 }

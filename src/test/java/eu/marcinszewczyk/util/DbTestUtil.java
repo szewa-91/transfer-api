@@ -3,8 +3,8 @@ package eu.marcinszewczyk.util;
 import eu.marcinszewczyk.db.DbFactory;
 import eu.marcinszewczyk.db.DbFactoryImpl;
 import eu.marcinszewczyk.model.Account;
-import eu.marcinszewczyk.model.Transaction;
-import eu.marcinszewczyk.model.TransactionStatus;
+import eu.marcinszewczyk.model.Transfer;
+import eu.marcinszewczyk.model.TransferStatus;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
@@ -30,9 +30,9 @@ public class DbTestUtil {
 
         SessionFactory sessionFactory = new Configuration().configure()
                 .addProperties(properties)
-                .addAnnotatedClass(Transaction.class)
+                .addAnnotatedClass(Transfer.class)
                 .addAnnotatedClass(Account.class)
-                .addAnnotatedClass(TransactionStatus.class)
+                .addAnnotatedClass(TransferStatus.class)
                 .buildSessionFactory();
         EntityManager entityManager = sessionFactory.createEntityManager();
 

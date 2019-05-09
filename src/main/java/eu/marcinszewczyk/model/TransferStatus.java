@@ -1,7 +1,5 @@
 package eu.marcinszewczyk.model;
 
-import javax.persistence.Entity;
-
-public enum TransactionStatus {
+public enum TransferStatus {
     CREATED, ISSUED, COMPLETED, REJECTED
 }

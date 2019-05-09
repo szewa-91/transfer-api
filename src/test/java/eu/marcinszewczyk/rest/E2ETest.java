@@ -1,5 +1,6 @@
 package eu.marcinszewczyk.rest;
 
+import eu.marcinszewczyk.db.AccountRepository;
 import eu.marcinszewczyk.db.DbFactory;
 import eu.marcinszewczyk.model.Account;
 import eu.marcinszewczyk.rest.RestTestUtil.ResponseWrapper;
@@ -30,6 +31,10 @@ public class E2ETest {
     public static void setUp() throws IOException, SQLException {
         DbFactory dbFactory = DbTestUtil.getTestDbFactory();
 
+        AccountRepository accountRepository = dbFactory.getAccountRepository();
+        accountRepository.save(ACCOUNT_1);
+        accountRepository.save(ACCOUNT_2);
+
         server = new JettyServer(PORT, new ServiceProvider(dbFactory));
         server.start();
     }
@@ -40,8 +45,8 @@ public class E2ETest {
     }
 
     @Test
-    public void shouldRejectTransactionWhenNoAccounts() throws IOException, URISyntaxException {
-        String transaction = "{" +
+    public void shouldPerformTransactionAccounts() throws IOException, URISyntaxException {
+        String transfer = "{" +
                 "    \"payerAccountNumber\":\"1234\"," +
                 "    \"receiverAccountNumber\":\"5678\"," +
                 "    \"amount\":50.00," +
@@ -54,11 +59,11 @@ public class E2ETest {
                 "   \"receiverAccountNumber\":\"5678\"," +
                 "   \"amount\":50.00," +
                 "   \"currencyCode\":\"PLN\"," +
-                "   \"status\":\"REJECTED\"" +
+                "   \"status\":\"COMPLETED\"" +
                 "}]";
 
-        RestTestUtil.post("http://localhost:9292/transactions", transaction);
-        ResponseWrapper response = RestTestUtil.get("http://localhost:9292/transactions/");
+        RestTestUtil.post("http://localhost:9292/transfers", transfer);
+        ResponseWrapper response = RestTestUtil.get("http://localhost:9292/transfers/");
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getBody()).isEqualToIgnoringWhitespace(expected);

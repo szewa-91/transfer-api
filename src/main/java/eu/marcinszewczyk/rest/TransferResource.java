@@ -1,8 +1,8 @@
 package eu.marcinszewczyk.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.marcinszewczyk.model.Transaction;
-import eu.marcinszewczyk.services.TransactionsService;
+import eu.marcinszewczyk.model.Transfer;
+import eu.marcinszewczyk.services.TransferService;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,12 +16,12 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-public class TransactionResource extends HttpServlet {
-    private TransactionsService transactionsService;
+public class TransferResource extends HttpServlet {
+    private TransferService transferService;
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public TransactionResource(TransactionsService transactionsService) {
-        this.transactionsService = transactionsService;
+    public TransferResource(TransferService transferService) {
+        this.transferService = transferService;
     }
 
     @Override
@@ -33,11 +33,11 @@ public class TransactionResource extends HttpServlet {
 
         try {
             if (pathParts.isEmpty()) {
-                respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getAllTransactions());
+                respondWithObject(response, HttpServletResponse.SC_OK, transferService.getAllTransfers());
 
             } else if (pathParts.size() == 1) {
                 long id = parseLong(pathParts.get(0));
-                respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getTransaction(id));
+                respondWithObject(response, HttpServletResponse.SC_OK, transferService.getTransfer(id));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -50,11 +50,11 @@ public class TransactionResource extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
-        Transaction transaction = objectMapper.readValue(request.getReader(), Transaction.class);
+        Transfer transfer = objectMapper.readValue(request.getReader(), Transfer.class);
 
         try {
             respondWithObject(response, HttpServletResponse.SC_OK,
-                    transactionsService.executeTransaction(transaction));
+                    transferService.executeTransfer(transfer));
         } catch (SQLException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
