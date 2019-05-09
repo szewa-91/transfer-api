@@ -52,11 +52,12 @@ public class TransferRepositoryTest {
     @Test
     public void shouldSaveWithNextId() {
         Transfer transfer = transfer(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, AMOUNT_STRING);
-        transferRepository.save(transfer);
+
+        Transfer savedTransfer = transferRepository.save(transfer);
 
         long expectedId = 4L;
 
-        assertThat(transfer).extracting(
+        assertThat(savedTransfer).extracting(
                 Transfer::getId,
                 Transfer::getPayerAccountNumber,
                 Transfer::getReceiverAccountNumber,
