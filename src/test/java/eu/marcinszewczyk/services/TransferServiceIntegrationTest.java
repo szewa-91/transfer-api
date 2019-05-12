@@ -48,6 +48,7 @@ public class TransferServiceIntegrationTest {
 
         Transfer result = transferService.executeTransfer(transfer);
 
+        assertThat(transferService.getAllTransfers()).hasSize(1);
         assertThat(result.getStatus()).isEqualTo(TransferStatus.COMPLETED);
         assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
                 .isEqualByComparingTo(BALANCE_1.subtract(transferAmount));
