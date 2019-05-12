@@ -1,21 +1,22 @@
 package eu.marcinszewczyk.db;
 
-import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 public class DbFactoryImpl implements DbFactory {
-    private EntityManager entityManager;
+    private EntityManagerProvider entityManagerProvider;
 
-    public DbFactoryImpl(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public DbFactoryImpl(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerProvider = new EntityManagerProvider(entityManagerFactory);
     }
 
     @Override
     public AccountRepository getAccountRepository() {
-        return new AccountRepository(entityManager);
+        return new AccountRepository(entityManagerProvider);
     }
 
     @Override
     public TransferRepository getTransferRepository() {
-        return new TransferRepository(entityManager);
+        return new TransferRepository(entityManagerProvider);
     }
 }
+

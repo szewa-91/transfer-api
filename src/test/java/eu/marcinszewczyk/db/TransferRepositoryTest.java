@@ -7,9 +7,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static eu.marcinszewczyk.model.TransferStatus.COMPLETED;
+import static eu.marcinszewczyk.model.TransferStatus.CREATED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TransferRepositoryTest {
@@ -50,21 +54,19 @@ public class TransferRepositoryTest {
     }
 
     @Test
-    public void shouldSaveWithNextId() {
-        Transfer transfer = transfer(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, AMOUNT_STRING);
-
-        Transfer savedTransfer = transferRepository.save(transfer);
-
-        long expectedId = 4L;
-
-        assertThat(savedTransfer).extracting(
-                Transfer::getId,
-                Transfer::getPayerAccountNumber,
-                Transfer::getReceiverAccountNumber,
-                Transfer::getAmount
-        ).containsExactly(
-                expectedId, PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, new BigDecimal(AMOUNT_STRING)
+    public void shouldHandleParallelTransferSave() {
+        List<Transfer> transfers = Stream.of(
+                transfer(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, "1.0"),
+                transfer(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, "2.0"),
+                transfer(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, "3.0"),
+                transfer(PAYER_ACCOUNT_NUMBER, RECEIVER_ACCOUNT_NUMBER, "4.0")
+        )
+                .parallel().map(transfer -> transferRepository.save(transfer))
+                .collect(Collectors.toList());
+        assertThat(transfers).extracting(Transfer::getStatus).containsExactly(
+                CREATED, CREATED, CREATED, CREATED
         );
+
     }
 
     private static Transfer transfer(String payerAccountNumber, String receiverAccountNumber, String amount) {
@@ -74,7 +76,7 @@ public class TransferRepositoryTest {
         transfer.setReceiverAccountNumber(receiverAccountNumber);
         transfer.setAmount(new BigDecimal(amount));
         transfer.setCurrencyCode("PLN");
-        transfer.setStatus(TransferStatus.CREATED);
+        transfer.setStatus(CREATED);
         return transfer;
     }
 }

@@ -12,7 +12,11 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static eu.marcinszewczyk.model.TransferStatus.CREATED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TransferServiceIntegrationTest {

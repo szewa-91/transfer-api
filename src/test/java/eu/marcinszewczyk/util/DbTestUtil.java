@@ -8,7 +8,7 @@ import eu.marcinszewczyk.model.TransferStatus;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import java.util.Properties;
 
 public class DbTestUtil {
@@ -34,9 +34,9 @@ public class DbTestUtil {
                 .addAnnotatedClass(Account.class)
                 .addAnnotatedClass(TransferStatus.class)
                 .buildSessionFactory();
-        EntityManager entityManager = sessionFactory.createEntityManager();
+        EntityManagerFactory entityManagerFactory = sessionFactory.openSession().getEntityManagerFactory();
 
 
-        return new DbFactoryImpl(entityManager);
+        return new DbFactoryImpl(entityManagerFactory);
     }
 }

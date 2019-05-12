@@ -8,6 +8,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 public class App {
     private final static int PORT = 9090;
@@ -15,7 +16,7 @@ public class App {
     public static void main(String... args) throws Exception {
         SessionFactory sessionFactory = new Configuration().configure()
                 .buildSessionFactory();
-        EntityManager entityManager = sessionFactory.createEntityManager();
+        EntityManagerFactory entityManager = sessionFactory.openSession().getEntityManagerFactory();
 
         DbFactory dbFactory = new DbFactoryImpl(entityManager);
 

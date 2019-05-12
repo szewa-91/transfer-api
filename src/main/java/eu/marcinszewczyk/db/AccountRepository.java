@@ -5,21 +5,21 @@ import eu.marcinszewczyk.model.Transfer;
 import eu.marcinszewczyk.model.TransferStatus;
 
 import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
 import java.math.BigDecimal;
 
 public class AccountRepository {
-    private EntityManager entityManager;
+    private EntityManagerProvider entityManagerProvider;
 
-    public AccountRepository(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    AccountRepository(EntityManagerProvider entityManagerProvider) {
+        this.entityManagerProvider = entityManagerProvider;
     }
 
     public Account findById(String payerAccountNumber) {
-        return entityManager.find(Account.class, payerAccountNumber);
+        return entityManagerProvider.getEntityManager().find(Account.class, payerAccountNumber);
     }
 
     public Account save(Account payerAccount) {
+        EntityManager entityManager = entityManagerProvider.getEntityManager();
         entityManager.getTransaction().begin();
         Account savedAccount = entityManager.merge(payerAccount);
         entityManager.getTransaction().commit();
@@ -27,10 +27,11 @@ public class AccountRepository {
     }
 
     public TransferStatus performMovement(Transfer transfer) {
+        EntityManager entityManager = entityManagerProvider.getEntityManager();
         entityManager.getTransaction().begin();
 
-        Account payerAccount = entityManager.find(Account.class, transfer.getPayerAccountNumber(), LockModeType.OPTIMISTIC);
-        Account receiverAccount = entityManager.find(Account.class, transfer.getReceiverAccountNumber(), LockModeType.OPTIMISTIC);
+        Account payerAccount = entityManager.find(Account.class, transfer.getPayerAccountNumber());
+        Account receiverAccount = entityManager.find(Account.class, transfer.getReceiverAccountNumber());
 
         if (payerAccount == null) {
             System.out.println("No account found: " + transfer.getPayerAccountNumber()

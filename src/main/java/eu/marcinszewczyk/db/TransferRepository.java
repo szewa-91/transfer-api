@@ -7,22 +7,23 @@ import javax.persistence.Query;
 import java.util.Collection;
 
 public class TransferRepository {
-    private EntityManager entityManager;
+    private EntityManagerProvider entityManagerProvider;
 
-    TransferRepository(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    TransferRepository(EntityManagerProvider entityManagerProvider) {
+        this.entityManagerProvider = entityManagerProvider;
     }
 
     public Collection<Transfer> findAll() {
-        Query query = entityManager.createQuery("SELECT e FROM Transfer e");
+        Query query = entityManagerProvider.getEntityManager().createQuery("SELECT e FROM Transfer e");
         return (Collection<Transfer>) query.getResultList();
     }
 
     public Transfer findById(Long id) {
-        return entityManager.find(Transfer.class, id);
+        return entityManagerProvider.getEntityManager().find(Transfer.class, id);
     }
 
     public Transfer save(Transfer transfer) {
+        EntityManager entityManager = entityManagerProvider.getEntityManager();
         entityManager.getTransaction().begin();
         Transfer savedTransfer = entityManager.merge(transfer);
         entityManager.getTransaction().commit();
