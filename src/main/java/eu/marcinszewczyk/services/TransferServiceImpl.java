@@ -5,6 +5,7 @@ import eu.marcinszewczyk.db.TransferRepository;
 import eu.marcinszewczyk.model.Transfer;
 import eu.marcinszewczyk.model.TransferStatus;
 
+import javax.persistence.OptimisticLockException;
 import java.math.BigDecimal;
 import java.util.Collection;
 
@@ -29,9 +30,27 @@ public class TransferServiceImpl implements TransferService {
     public Transfer executeTransfer(Transfer transfer) {
         System.out.println("Received transfer: " + transfer);
         validateTransfer(transfer);
-        transfer = saveWithStatus(transfer, TransferStatus.CREATED);
-        TransferStatus transferStatus = accountRepository.performMovement(transfer);
-        return saveWithStatus(transfer, transferStatus);
+        for (int retryAttempts = 3; ; retryAttempts--) {
+            Transfer transferAttempt = saveWithStatus(transfer, TransferStatus.CREATED);
+            try {
+                TransferStatus transferStatus = accountRepository.performMovement(transferAttempt);
+                return saveWithStatus(transferAttempt, transferStatus);
+            } catch (OptimisticLockException e) {
+                e.printStackTrace();
+                if (retryAttempts == 0) {
+                    System.out.println("Transfer not executed. Retry attempts used.");
+                    return saveWithStatus(transferAttempt, TransferStatus.REJECTED);
+                }
+            }
+            System.out.println(String.format("Retrying attempt with transfer (%d retries left), " +
+                    "transaction: %s", retryAttempts, transferAttempt));
+            saveWithStatus(transferAttempt, TransferStatus.REJECTED);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private Transfer saveWithStatus(Transfer transfer, TransferStatus rejected) {

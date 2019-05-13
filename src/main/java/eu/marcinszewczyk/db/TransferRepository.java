@@ -7,7 +7,7 @@ import javax.persistence.Query;
 import java.util.Collection;
 
 public class TransferRepository {
-    private EntityManagerProvider entityManagerProvider;
+    private final EntityManagerProvider entityManagerProvider;
 
     TransferRepository(EntityManagerProvider entityManagerProvider) {
         this.entityManagerProvider = entityManagerProvider;

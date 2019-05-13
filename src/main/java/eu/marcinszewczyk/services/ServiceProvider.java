@@ -5,7 +5,7 @@ import eu.marcinszewczyk.db.DbFactory;
 import java.util.Map;
 
 public class ServiceProvider {
-    private Map<Class, Object> servicesInstances;
+    private final Map<Class, Object> servicesInstances;
 
     public ServiceProvider(DbFactory dbFactory) {
         servicesInstances = Map.of(

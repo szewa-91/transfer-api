@@ -7,13 +7,12 @@ import eu.marcinszewczyk.services.ServiceProvider;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 public class App {
     private final static int PORT = 9090;
 
-    public static void main(String... args) throws Exception {
+    public static void main(String... args) {
         SessionFactory sessionFactory = new Configuration().configure()
                 .buildSessionFactory();
         EntityManagerFactory entityManager = sessionFactory.openSession().getEntityManagerFactory();

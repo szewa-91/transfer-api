@@ -17,8 +17,8 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 public class TransferResource extends HttpServlet {
-    private TransferService transferService;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final TransferService transferService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TransferResource(TransferService transferService) {
         this.transferService = transferService;
@@ -31,17 +31,12 @@ public class TransferResource extends HttpServlet {
             throws IOException {
         List<String> pathParts = getPaths(request);
 
-        try {
-            if (pathParts.isEmpty()) {
-                respondWithObject(response, HttpServletResponse.SC_OK, transferService.getAllTransfers());
+        if (pathParts.isEmpty()) {
+            respondWithObject(response, HttpServletResponse.SC_OK, transferService.getAllTransfers());
 
-            } else if (pathParts.size() == 1) {
-                long id = parseLong(pathParts.get(0));
-                respondWithObject(response, HttpServletResponse.SC_OK, transferService.getTransfer(id));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } else if (pathParts.size() == 1) {
+            long id = parseLong(pathParts.get(0));
+            respondWithObject(response, HttpServletResponse.SC_OK, transferService.getTransfer(id));
         }
     }
 
@@ -52,13 +47,8 @@ public class TransferResource extends HttpServlet {
             throws IOException {
         Transfer transfer = objectMapper.readValue(request.getReader(), Transfer.class);
 
-        try {
-            respondWithObject(response, HttpServletResponse.SC_OK,
-                    transferService.executeTransfer(transfer));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+        respondWithObject(response, HttpServletResponse.SC_OK,
+                transferService.executeTransfer(transfer));
     }
 
     private void respondWithObject(HttpServletResponse response, int status, Object object) throws IOException {

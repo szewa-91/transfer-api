@@ -3,7 +3,7 @@ package eu.marcinszewczyk.db;
 import javax.persistence.EntityManagerFactory;
 
 public class DbFactoryImpl implements DbFactory {
-    private EntityManagerProvider entityManagerProvider;
+    private final EntityManagerProvider entityManagerProvider;
 
     public DbFactoryImpl(EntityManagerFactory entityManagerFactory) {
         this.entityManagerProvider = new EntityManagerProvider(entityManagerFactory);

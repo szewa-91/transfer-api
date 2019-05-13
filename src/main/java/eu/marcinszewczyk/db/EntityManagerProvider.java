@@ -4,7 +4,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 public class EntityManagerProvider {
-    private ThreadLocal<EntityManager> entityManager ;
+    private final ThreadLocal<EntityManager> entityManager ;
 
 
     EntityManagerProvider(EntityManagerFactory entityManagerFactory) {

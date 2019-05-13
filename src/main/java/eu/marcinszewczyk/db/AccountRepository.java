@@ -5,10 +5,11 @@ import eu.marcinszewczyk.model.Transfer;
 import eu.marcinszewczyk.model.TransferStatus;
 
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import java.math.BigDecimal;
 
 public class AccountRepository {
-    private EntityManagerProvider entityManagerProvider;
+    private final EntityManagerProvider entityManagerProvider;
 
     AccountRepository(EntityManagerProvider entityManagerProvider) {
         this.entityManagerProvider = entityManagerProvider;
@@ -30,32 +31,42 @@ public class AccountRepository {
         EntityManager entityManager = entityManagerProvider.getEntityManager();
         entityManager.getTransaction().begin();
 
-        Account payerAccount = entityManager.find(Account.class, transfer.getPayerAccountNumber());
-        Account receiverAccount = entityManager.find(Account.class, transfer.getReceiverAccountNumber());
+        Account payerAccount = entityManager.find(Account.class, transfer.getPayerAccountNumber(), LockModeType.OPTIMISTIC);
+        Account receiverAccount = entityManager.find(Account.class, transfer.getReceiverAccountNumber(), LockModeType.OPTIMISTIC);
 
         if (payerAccount == null) {
-            System.out.println("No account found: " + transfer.getPayerAccountNumber()
+            System.out.println("Transfer not executed. No account found: " + transfer.getPayerAccountNumber()
                     + "Transfer rejected: " + transfer);
             entityManager.getTransaction().rollback();
             return TransferStatus.REJECTED;
         }
         if (receiverAccount == null) {
-            System.out.println("No account found: " + transfer.getReceiverAccountNumber()
+            System.out.println("Transfer not executed. No account found: " + transfer.getReceiverAccountNumber()
                     + "Transfer rejected: " + transfer);
             entityManager.getTransaction().rollback();
             return TransferStatus.REJECTED;
         }
+
+        System.out.println("Payer account: " + payerAccount.getAccountNumber() +
+                " has balance: " + payerAccount.getBalance());
+        System.out.println("Receiver account: " + receiverAccount.getAccountNumber() +
+                " has balance: " + receiverAccount.getBalance());
         BigDecimal amount = transfer.getAmount();
         if (payerAccount.hasAmount(amount)) {
             payerAccount.subtractFromBalance(amount);
             receiverAccount.addToBalance(amount);
             entityManager.persist(payerAccount);
             entityManager.persist(receiverAccount);
-            System.out.println("Transfer executed: " + transfer);
             entityManager.getTransaction().commit();
+            System.out.println("Payer account: " + payerAccount.getAccountNumber() +
+                    " has balance: " + payerAccount.getBalance() + " after transfer.");
+            System.out.println("Receiver account: " + receiverAccount.getAccountNumber() +
+                    " has balance: " + receiverAccount.getBalance() + " after transfer.");
+            System.out.println("Transfer executed: " + transfer);
+
             return TransferStatus.COMPLETED;
         } else {
-            System.out.println("Transfer not executed, no money on the payer account: " + transfer);
+            System.out.println("Transfer not executed. No money on the payer account: " + transfer);
             entityManager.getTransaction().rollback();
             return TransferStatus.REJECTED;
         }

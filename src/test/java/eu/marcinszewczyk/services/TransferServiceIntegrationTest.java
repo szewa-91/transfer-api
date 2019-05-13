@@ -11,12 +11,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static eu.marcinszewczyk.model.TransferStatus.CREATED;
+import static eu.marcinszewczyk.model.TransferStatus.COMPLETED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TransferServiceIntegrationTest {
@@ -43,7 +42,7 @@ public class TransferServiceIntegrationTest {
     }
 
     @Test
-    public void shouldPerformTransfer() throws SQLException {
+    public void shouldPerformTransfer() {
         BigDecimal transferAmount = new BigDecimal("70");
         Transfer transfer = transfer(
                 account(ACCOUNT_NUMBER_1, BALANCE_1, "USD").getAccountNumber(),
@@ -53,7 +52,7 @@ public class TransferServiceIntegrationTest {
         Transfer result = transferService.executeTransfer(transfer);
 
         assertThat(transferService.getAllTransfers()).hasSize(1);
-        assertThat(result.getStatus()).isEqualTo(TransferStatus.COMPLETED);
+        assertThat(result.getStatus()).isEqualTo(COMPLETED);
         assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
                 .isEqualByComparingTo(BALANCE_1.subtract(transferAmount));
         assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
@@ -61,7 +60,7 @@ public class TransferServiceIntegrationTest {
     }
 
     @Test
-    public void shouldNotPerformTransferIfNotSufficientBalance() throws SQLException {
+    public void shouldNotPerformTransferIfNotSufficientBalance() {
         Transfer transfer = transfer(
                 account(ACCOUNT_NUMBER_1, BALANCE_1, "USD").getAccountNumber(),
                 account(ACCOUNT_NUMBER_2, BALANCE_2, "USD").getAccountNumber(),
@@ -77,7 +76,7 @@ public class TransferServiceIntegrationTest {
     }
 
     @Test
-    public void shouldNotPerformTransferIfNoAccounts() throws SQLException {
+    public void shouldNotPerformTransferIfNoAccounts() {
         Transfer transfer = transfer(
                 NON_EXISTENT_ACCOUNT_NUMBER_1,
                 NON_EXISTENT_ACCOUNT_NUMBER_2,
@@ -86,10 +85,49 @@ public class TransferServiceIntegrationTest {
         Transfer result = transferService.executeTransfer(transfer);
 
         assertThat(result.getStatus()).isEqualTo(TransferStatus.REJECTED);
-        assertThat(accountRepository.findById(account(ACCOUNT_NUMBER_1, BALANCE_1, "USD").getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
                 .isEqualByComparingTo(BALANCE_1);
-        assertThat(accountRepository.findById(account(ACCOUNT_NUMBER_2, BALANCE_2, "USD").getAccountNumber()).getBalance())
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
                 .isEqualByComparingTo(BALANCE_2);
+    }
+
+    @Test
+    public void shouldSerializeAndExecuteParallelTransactionToOneAccount() {
+        BigDecimal transferAmount = new BigDecimal("20");
+        List<Transfer> transfers = Stream.of(
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount)
+        )
+                .parallel().map(transfer -> transferService.executeTransfer(transfer)).collect(Collectors.toList());
+
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
+                .isEqualByComparingTo(
+                        BALANCE_2.add(transferAmount).add(transferAmount)
+                                .add(transferAmount).add(transferAmount));
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
+                .isEqualByComparingTo(
+                        BALANCE_1.subtract(transferAmount).subtract(transferAmount)
+                                .subtract(transferAmount).subtract(transferAmount));
+    }
+
+    @Test
+    public void shouldAllowOnlyOneFromParallelTransferWhenNoSufficientBalance() {
+        BigDecimal transferAmount = new BigDecimal("70");
+        Stream.of(
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
+                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount)
+        )
+                .parallel().forEach(transfer -> transferService.executeTransfer(transfer));
+
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
+                .isEqualByComparingTo(BALANCE_1.subtract(transferAmount));
+        assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
+                .isEqualByComparingTo(BALANCE_2.add(transferAmount));
+
     }
 
     private static Transfer transfer(String payerAccountNumber, String receiverAccountNumber, BigDecimal amount) {
