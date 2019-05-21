@@ -2,11 +2,11 @@ package eu.marcinszewczyk.services;
 
 import eu.marcinszewczyk.db.AccountRepository;
 import eu.marcinszewczyk.db.DbFactory;
-import eu.marcinszewczyk.db.TransferRepository;
 import eu.marcinszewczyk.model.Account;
 import eu.marcinszewczyk.model.Transfer;
 import eu.marcinszewczyk.model.TransferStatus;
 import eu.marcinszewczyk.util.DbTestUtil;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,12 +33,14 @@ public class TransferServiceIntegrationTest {
     public void setUp() {
         DbFactory dbFactory = DbTestUtil.getTestDbFactory();
         accountRepository = dbFactory.getAccountRepository();
-        TransferRepository transferRepository = dbFactory.getTransferRepository();
 
         accountRepository.save(account(ACCOUNT_NUMBER_1, BALANCE_1, "USD"));
         accountRepository.save(account(ACCOUNT_NUMBER_2, BALANCE_2, "USD"));
 
-        transferService = new TransferServiceImpl(transferRepository, accountRepository);
+        transferService = new TransferServiceImpl(
+                dbFactory.getTransferRepository(),
+                accountRepository,
+                dbFactory.getLockingService());
     }
 
     @Test
@@ -96,20 +98,23 @@ public class TransferServiceIntegrationTest {
         BigDecimal transferAmount = new BigDecimal("20");
         List<Transfer> transfers = Stream.of(
                 transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
-                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
-                transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount),
                 transfer(ACCOUNT_NUMBER_1, ACCOUNT_NUMBER_2, transferAmount)
         )
                 .parallel().map(transfer -> transferService.executeTransfer(transfer)).collect(Collectors.toList());
 
-        assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
+        SoftAssertions soft = new SoftAssertions();
+        soft.assertThat(transfers).extracting(Transfer::getStatus).containsExactly(COMPLETED,COMPLETED);
+
+        soft.assertThat(accountRepository.findById(ACCOUNT_NUMBER_2).getBalance())
                 .isEqualByComparingTo(
                         BALANCE_2.add(transferAmount).add(transferAmount)
-                                .add(transferAmount).add(transferAmount));
-        assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
+                );
+        soft.assertThat(accountRepository.findById(ACCOUNT_NUMBER_1).getBalance())
                 .isEqualByComparingTo(
                         BALANCE_1.subtract(transferAmount).subtract(transferAmount)
-                                .subtract(transferAmount).subtract(transferAmount));
+                );
+
+        soft.assertAll();
     }
 
     @Test

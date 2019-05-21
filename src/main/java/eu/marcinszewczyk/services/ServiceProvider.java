@@ -12,7 +12,9 @@ public class ServiceProvider {
                 TransferService.class,
                 new TransferServiceImpl(
                         dbFactory.getTransferRepository(),
-                        dbFactory.getAccountRepository())
+                        dbFactory.getAccountRepository(),
+                        dbFactory.getLockingService()
+                        )
         );
     }
 

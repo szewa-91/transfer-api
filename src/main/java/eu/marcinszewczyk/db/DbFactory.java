@@ -4,4 +4,6 @@ public interface DbFactory {
     AccountRepository getAccountRepository();
 
     TransferRepository getTransferRepository();
+
+    LockingService getLockingService();
 }

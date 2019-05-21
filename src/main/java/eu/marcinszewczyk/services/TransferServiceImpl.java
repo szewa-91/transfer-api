@@ -1,22 +1,25 @@
 package eu.marcinszewczyk.services;
 
 import eu.marcinszewczyk.db.AccountRepository;
+import eu.marcinszewczyk.db.LockingService;
 import eu.marcinszewczyk.db.TransferRepository;
 import eu.marcinszewczyk.model.Transfer;
 import eu.marcinszewczyk.model.TransferStatus;
 
-import javax.persistence.OptimisticLockException;
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.concurrent.locks.Lock;
 
 public class TransferServiceImpl implements TransferService {
 
     private final TransferRepository transferRepository;
     private final AccountRepository accountRepository;
+    private final LockingService lockingService;
 
-    TransferServiceImpl(TransferRepository transferRepository, AccountRepository accountRepository) {
+    TransferServiceImpl(TransferRepository transferRepository, AccountRepository accountRepository, LockingService lockingService) {
         this.transferRepository = transferRepository;
         this.accountRepository = accountRepository;
+        this.lockingService = lockingService;
     }
 
     public Collection<Transfer> getAllTransfers() {
@@ -29,28 +32,26 @@ public class TransferServiceImpl implements TransferService {
 
     public Transfer executeTransfer(Transfer transfer) {
         System.out.println("Received transfer: " + transfer);
+        Lock payerLock = lockingService.getLock(transfer.getPayerAccountNumber());
+        Lock receiverLock = lockingService.getLock(transfer.getReceiverAccountNumber());
+        System.out.println("Try to lock " + transfer.getPayerAccountNumber());
+        payerLock.lock();
+        System.out.println("Locked " + transfer.getPayerAccountNumber());
+        System.out.println("Try to lock " + transfer.getReceiverAccountNumber());
+        receiverLock.lock();
+        System.out.println("Locked " + transfer.getReceiverAccountNumber());
+
         validateTransfer(transfer);
-        for (int retryAttempts = 3; ; retryAttempts--) {
-            Transfer transferAttempt = saveWithStatus(transfer, TransferStatus.CREATED);
-            try {
-                TransferStatus transferStatus = accountRepository.performMovement(transferAttempt);
-                return saveWithStatus(transferAttempt, transferStatus);
-            } catch (OptimisticLockException e) {
-                e.printStackTrace();
-                if (retryAttempts == 0) {
-                    System.out.println("Transfer not executed. Retry attempts used.");
-                    return saveWithStatus(transferAttempt, TransferStatus.REJECTED);
-                }
-            }
-            System.out.println(String.format("Retrying attempt with transfer (%d retries left), " +
-                    "transaction: %s", retryAttempts, transferAttempt));
-            saveWithStatus(transferAttempt, TransferStatus.REJECTED);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        Transfer transferAttempt = saveWithStatus(transfer, TransferStatus.CREATED);
+        TransferStatus transferStatus = accountRepository.performMovement(transferAttempt);
+        Transfer transfer1 = saveWithStatus(transferAttempt, transferStatus);
+
+
+        System.out.println("Unlocked " + transfer.getPayerAccountNumber());
+        payerLock.unlock();
+        System.out.println("Unlocked " + transfer.getReceiverAccountNumber());
+        receiverLock.unlock();
+        return transfer1;
     }
 
     private Transfer saveWithStatus(Transfer transfer, TransferStatus rejected) {

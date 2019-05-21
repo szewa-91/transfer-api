@@ -13,12 +13,18 @@ public class DbFactoryImpl implements DbFactory {
 
     @Override
     public AccountRepository getAccountRepository() {
-        return new AccountRepository(entityManagerProvider, lockingService);
+        return new AccountRepository(entityManagerProvider);
     }
 
     @Override
     public TransferRepository getTransferRepository() {
         return new TransferRepository(entityManagerProvider);
     }
+
+    @Override
+    public LockingService getLockingService() {
+        return lockingService;
+    }
+
 }
 
