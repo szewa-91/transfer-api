@@ -1,5 +1,5 @@
 package eu.marcinszewczyk.model;
 
-public enum TransactionStatus {
+public enum TransferStatus {
     CREATED, ISSUED, COMPLETED, REJECTED
 }

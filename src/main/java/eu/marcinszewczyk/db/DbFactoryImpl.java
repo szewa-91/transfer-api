@@ -1,42 +1,30 @@
 package eu.marcinszewczyk.db;
 
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.support.ConnectionSource;
-import com.j256.ormlite.table.TableUtils;
-import eu.marcinszewczyk.model.Account;
-import eu.marcinszewczyk.model.Transaction;
-
-import java.io.IOException;
-import java.sql.SQLException;
+import javax.persistence.EntityManagerFactory;
 
 public class DbFactoryImpl implements DbFactory {
-    private DbConfig dbConfig;
+    private final EntityManagerProvider entityManagerProvider;
+    private final LockingService lockingService;
 
-    public DbFactoryImpl(DbConfig dbConfig) {
-        this.dbConfig = dbConfig;
+    public DbFactoryImpl(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerProvider = new EntityManagerProvider(entityManagerFactory);
+        this.lockingService = new LockingService();
     }
 
     @Override
-    public DaoProvider getDaos() throws SQLException, IOException {
-        try (ConnectionSource connectionSource = openConnection(dbConfig)) {
-            if (dbConfig.isShouldCreateSchema()) {
-                TableUtils.dropTable(connectionSource, Transaction.class, true);
-                TableUtils.dropTable(connectionSource, Account.class, true);
-                TableUtils.createTable(connectionSource, Account.class);
-                TableUtils.createTable(connectionSource, Transaction.class);
-            }
-            return new DaoProvider(
-                    DaoManager.createDao(connectionSource, Account.class),
-                    DaoManager.createDao(connectionSource, Transaction.class));
-        }
+    public AccountRepository getAccountRepository() {
+        return new AccountRepository(entityManagerProvider);
     }
 
-    private JdbcConnectionSource openConnection(DbConfig dbConfig) throws SQLException {
-        return new JdbcConnectionSource(
-                dbConfig.getDatabaseUrl(),
-                dbConfig.getUsername(),
-                dbConfig.getPassword()
-        );
+    @Override
+    public TransferRepository getTransferRepository() {
+        return new TransferRepository(entityManagerProvider);
     }
+
+    @Override
+    public LockingService getLockingService() {
+        return lockingService;
+    }
+
 }
+

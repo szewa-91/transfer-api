@@ -1,6 +1,6 @@
 package eu.marcinszewczyk.server;
 
-import eu.marcinszewczyk.rest.TransactionResource;
+import eu.marcinszewczyk.rest.TransferResource;
 import eu.marcinszewczyk.services.ServiceProvider;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -34,8 +34,8 @@ public class JettyServer {
                 new ServletContextHandler(NO_SESSIONS);
         handler.setContextPath("/");
 
-        TransactionResource transactionResource = new TransactionResource(serviceProvider.getTransactionsService());
-        handler.addServlet(new ServletHolder(transactionResource), "/transactions/*");
+        TransferResource transferResource = new TransferResource(serviceProvider.getTransferService());
+        handler.addServlet(new ServletHolder(transferResource), "/transfers/*");
 
         server.setHandler(handler);
     }

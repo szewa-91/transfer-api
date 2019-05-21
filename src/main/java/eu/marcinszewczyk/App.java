@@ -1,21 +1,25 @@
 package eu.marcinszewczyk;
 
-import eu.marcinszewczyk.db.DbConfig;
 import eu.marcinszewczyk.db.DbFactory;
 import eu.marcinszewczyk.db.DbFactoryImpl;
 import eu.marcinszewczyk.server.JettyServer;
 import eu.marcinszewczyk.services.ServiceProvider;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+import javax.persistence.EntityManagerFactory;
 
 public class App {
     private final static int PORT = 9090;
-    private final static String DATABASE_URL = "jdbc:h2:~/transfers";
-    private final static String USERNAME = "sa";
-    private final static String PASSWORD = "";
-    private final static boolean SHOULD_CREATE_SCHEMA = true;
 
-    public static void main(String... args) throws Exception {
-        DbConfig dbConfig = new DbConfig(DATABASE_URL, USERNAME, PASSWORD, SHOULD_CREATE_SCHEMA);
-        DbFactory dbFactory= new DbFactoryImpl(dbConfig);
+    public static void main(String... args) {
+        SessionFactory sessionFactory = new Configuration().configure()
+                .buildSessionFactory();
+        EntityManagerFactory entityManager = sessionFactory.openSession().getEntityManagerFactory();
+
+        DbFactory dbFactory = new DbFactoryImpl(entityManager);
+
+
         ServiceProvider serviceProvider = new ServiceProvider(dbFactory);
         new JettyServer(PORT, serviceProvider).start();
     }

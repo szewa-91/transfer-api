@@ -1,13 +1,14 @@
 package eu.marcinszewczyk.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.marcinszewczyk.model.Transaction;
-import eu.marcinszewczyk.services.TransactionsService;
+import eu.marcinszewczyk.model.Transfer;
+import eu.marcinszewczyk.services.TransferService;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 import static java.lang.Long.parseLong;
@@ -15,12 +16,12 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-public class TransactionResource extends HttpServlet {
-    private TransactionsService transactionsService;
-    private ObjectMapper objectMapper = new ObjectMapper();
+public class TransferResource extends HttpServlet {
+    private final TransferService transferService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TransactionResource(TransactionsService transactionsService) {
-        this.transactionsService = transactionsService;
+    public TransferResource(TransferService transferService) {
+        this.transferService = transferService;
     }
 
     @Override
@@ -31,10 +32,11 @@ public class TransactionResource extends HttpServlet {
         List<String> pathParts = getPaths(request);
 
         if (pathParts.isEmpty()) {
-            respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getAllTransactions());
+            respondWithObject(response, HttpServletResponse.SC_OK, transferService.getAllTransfers());
+
         } else if (pathParts.size() == 1) {
             long id = parseLong(pathParts.get(0));
-            respondWithObject(response, HttpServletResponse.SC_OK, transactionsService.getTransaction(id));
+            respondWithObject(response, HttpServletResponse.SC_OK, transferService.getTransfer(id));
         }
     }
 
@@ -43,14 +45,14 @@ public class TransactionResource extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
-        Transaction transaction = objectMapper.readValue(request.getReader(), Transaction.class);
-        transactionsService.saveTransaction(transaction);
+        Transfer transfer = objectMapper.readValue(request.getReader(), Transfer.class);
 
-        respondWithObject(response, HttpServletResponse.SC_OK, transaction);
+        respondWithObject(response, HttpServletResponse.SC_OK,
+                transferService.executeTransfer(transfer));
     }
 
-    private void respondWithObject(HttpServletResponse response, int status, Object transactions) throws IOException {
-        response.getWriter().println(objectMapper.writeValueAsString(transactions));
+    private void respondWithObject(HttpServletResponse response, int status, Object object) throws IOException {
+        response.getWriter().println(objectMapper.writeValueAsString(object));
         response.setContentType("application/json");
         response.setStatus(status);
     }
